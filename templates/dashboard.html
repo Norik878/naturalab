@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Дашборд — NaturaLab{% endblock %}
+{% block page_title %}Дашборд{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'order-create' %}" class="btn btn-success btn-sm">
+    <i class="bi bi-plus-lg me-1"></i>Новый заказ
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card border-0 bg-white shadow-sm p-3">
+      <div class="text-muted" style="font-size:12px">Активных заказов</div>
+      <div class="fs-3 fw-bold">{{ active_orders }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-0 bg-white shadow-sm p-3">
+      <div class="text-muted" style="font-size:12px">Партий сырья</div>
+      <div class="fs-3 fw-bold">{{ total_batches }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-0 bg-white shadow-sm p-3">
+      <div class="text-muted" style="font-size:12px">Истекает скоро</div>
+      <div class="fs-3 fw-bold text-warning">{{ expiring_soon }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-0 bg-white shadow-sm p-3">
+      <div class="text-muted" style="font-size:12px">Просрочено</div>
+      <div class="fs-3 fw-bold text-danger">{{ expired }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-500 border-bottom">
+        <i class="bi bi-exclamation-triangle text-warning me-1"></i> Уведомления о сроках
+      </div>
+      <div class="card-body p-0">
+        {% for batch in expiring_batches %}
+        <div class="d-flex align-items-center gap-3 px-3 py-2 border-bottom">
+          <span class="badge rounded-pill {% if batch.days_left <= 14 %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+            {{ batch.days_left }} дн.
+          </span>
+          <div>
+            <div style="font-size:13px;font-weight:500">{{ batch.ingredient.name }}</div>
+            <div style="font-size:11px;color:#6c757d">Партия {{ batch.lot_number }} · до {{ batch.expiry_date }}</div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="px-3 py-3 text-muted" style="font-size:13px">Все сроки в норме</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-500 border-bottom">
+        <i class="bi bi-clipboard2-check text-success me-1"></i> Текущие заказы
+      </div>
+      <div class="card-body p-0">
+        {% for order in recent_orders %}
+        <div class="d-flex align-items-center gap-3 px-3 py-2 border-bottom">
+          <span class="fw-500" style="font-size:13px;min-width:70px">{{ order.number }}</span>
+          <span class="flex-grow-1" style="font-size:13px">{{ order.product }}</span>
+          <span class="badge rounded-pill
+            {% if order.status == 'in_progress' %}bg-primary
+            {% elif order.status == 'pending' %}bg-warning text-dark
+            {% elif order.status == 'done' %}bg-success
+            {% else %}bg-secondary{% endif %}">
+            {{ order.get_status_display }}
+          </span>
+        </div>
+        {% empty %}
+        <div class="px-3 py-3 text-muted" style="font-size:13px">Заказов пока нет</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

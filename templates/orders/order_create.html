@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Новый заказ{% endblock %}
+{% block page_title %}Создать заказ{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Продукт</label>
+            <select name="product" class="form-select" required>
+              {% for p in products %}
+              <option value="{{ p.pk }}">{{ p.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Количество, шт</label>
+            <input type="number" name="quantity" class="form-control" min="1" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Срок выпуска</label>
+            <input type="date" name="due_date" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Примечания</label>
+            <textarea name="notes" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Создать заказ</button>
+            <a href="{% url 'order-list' %}" class="btn btn-outline-secondary">Отмена</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

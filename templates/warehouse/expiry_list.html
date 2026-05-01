@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Сроки годности{% endblock %}
+{% block page_title %}Контроль сроков годности{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card border-0 bg-white shadow-sm p-3">
+      <div class="text-muted" style="font-size:12px">В норме</div>
+      <div class="fs-3 fw-bold text-success">{{ ok_count }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card border-0 bg-white shadow-sm p-3">
+      <div class="text-muted" style="font-size:12px">Истекает до 30 дней</div>
+      <div class="fs-3 fw-bold text-warning">{{ warning_count }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card border-0 bg-white shadow-sm p-3">
+      <div class="text-muted" style="font-size:12px">Просрочено</div>
+      <div class="fs-3 fw-bold text-danger">{{ expired_count }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Сырьё</th>
+          <th>Лот №</th>
+          <th>Остаток</th>
+          <th>Срок годности</th>
+          <th>Дней осталось</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for batch in batches %}
+        <tr>
+          <td>{{ batch.ingredient.name }}</td>
+          <td>{{ batch.lot_number }}</td>
+          <td>{{ batch.quantity }} {{ batch.ingredient.get_unit_display }}</td>
+          <td>{{ batch.expiry_date }}</td>
+          <td>
+            {% if batch.days_left < 0 %}
+              <span class="text-danger fw-bold">Просрочено на {{ batch.days_left|cut:"-" }} дн.</span>
+            {% elif batch.days_left <= 30 %}
+              <span class="text-warning fw-bold">{{ batch.days_left }} дн.</span>
+            {% else %}
+              <span class="text-success">{{ batch.days_left }} дн.</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
