@@ -123,3 +123,54 @@ def writeoff_log(request):
         'batch__ingredient', 'order', 'written_off_by'
     ).all()
     return render(request, 'warehouse/writeoff_log.html', {'logs': logs})
+
+
+from django.db.models import Sum, Count
+from django.utils import timezone
+from datetime import timedelta
+
+@admin_required
+def reports(request):
+    today = timezone.now().date()
+    month_start = today.replace(day=1)
+
+    # Статистика заказов за месяц
+    orders_month = ProductionOrder.objects.filter(created_at__date__gte=month_start)
+    orders_stats = {
+        'total':       orders_month.count(),
+        'done':        orders_month.filter(status='done').count(),
+        'in_progress': orders_month.filter(status='in_progress').count(),
+        'cancelled':   orders_month.filter(status='cancelled').count(),
+    }
+
+    # Расход сырья за месяц
+    writeoff_stats = WriteOffLog.objects.filter(
+        written_off_at__date__gte=month_start
+    ).values(
+        'batch__ingredient__name',
+        'batch__ingredient__unit'
+    ).annotate(
+        total_quantity=Sum('quantity'),
+        order_count=Count('order', distinct=True)
+    ).order_by('-total_quantity')
+
+    # Топ используемого сырья за всё время
+    top_ingredients = WriteOffLog.objects.values(
+        'batch__ingredient__name',
+        'batch__ingredient__unit'
+    ).annotate(
+        total=Sum('quantity')
+    ).order_by('-total')[:5]
+
+    # Остатки склада
+    batches = Batch.objects.filter(status='available').select_related('ingredient')
+
+    context = {
+        'orders_stats':    orders_stats,
+        'writeoff_stats':  writeoff_stats,
+        'top_ingredients': top_ingredients,
+        'batches':         batches,
+        'month':           month_start.strftime('%B %Y'),
+        'today':           today,
+    }
+    return render(request, 'warehouse/reports.html', context)

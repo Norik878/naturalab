@@ -1,4 +1,5 @@
 from django.db import models
+from decimal import Decimal
 
 class Ingredient(models.Model):
     UNIT_CHOICES = [
@@ -8,9 +9,11 @@ class Ingredient(models.Model):
         ('ml', 'Миллилитр'),
     ]
 
-    name        = models.CharField(max_length=200, verbose_name='Название')
-    unit        = models.CharField(max_length=10, choices=UNIT_CHOICES, verbose_name='Единица измерения')
-    description = models.TextField(blank=True, verbose_name='Описание')
+    name         = models.CharField(max_length=200, verbose_name='Название')
+    unit         = models.CharField(max_length=10, choices=UNIT_CHOICES, verbose_name='Единица измерения')
+    description  = models.TextField(blank=True, verbose_name='Описание')
+    min_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0,
+                                       verbose_name='Минимальный остаток')
 
     class Meta:
         verbose_name = 'Сырьё'
@@ -27,12 +30,12 @@ class Batch(models.Model):
         ('expired',   'Просрочена'),
     ]
 
-    ingredient   = models.ForeignKey(Ingredient, on_delete=models.PROTECT, verbose_name='Сырьё')
-    lot_number   = models.CharField(max_length=50, unique=True, verbose_name='Номер партии')
-    quantity     = models.DecimalField(max_digits=10, decimal_places=3, verbose_name='Остаток')
-    received_at  = models.DateField(verbose_name='Дата поступления')
-    expiry_date  = models.DateField(verbose_name='Срок годности')
-    status       = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
+    ingredient  = models.ForeignKey(Ingredient, on_delete=models.PROTECT, verbose_name='Сырьё')
+    lot_number  = models.CharField(max_length=50, unique=True, verbose_name='Номер партии')
+    quantity    = models.DecimalField(max_digits=10, decimal_places=3, verbose_name='Остаток')
+    received_at = models.DateField(verbose_name='Дата поступления')
+    expiry_date = models.DateField(verbose_name='Срок годности')
+    status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
 
     class Meta:
         verbose_name = 'Партия сырья'
@@ -55,12 +58,26 @@ class Batch(models.Model):
         elif self.days_left <= 30:
             return 'warning'
         return 'ok'
-    
+
+    @property
+    def stock_status(self):
+        min_q = self.ingredient.min_quantity
+        if min_q <= 0:
+            return 'ok'
+        if self.quantity <= 0:
+            return 'empty'
+        if self.quantity < min_q * Decimal('0.2'):
+            return 'critical'
+        if self.quantity < min_q:
+            return 'low'
+        return 'ok'
+
+
 class WriteOffLog(models.Model):
-    batch       = models.ForeignKey(Batch, on_delete=models.PROTECT, verbose_name='Партия')
-    order       = models.ForeignKey('orders.ProductionOrder', on_delete=models.PROTECT,
-                                    verbose_name='Заказ')
-    quantity    = models.DecimalField(max_digits=10, decimal_places=5, verbose_name='Списано')
+    batch          = models.ForeignKey(Batch, on_delete=models.PROTECT, verbose_name='Партия')
+    order          = models.ForeignKey('orders.ProductionOrder', on_delete=models.PROTECT,
+                                       verbose_name='Заказ')
+    quantity       = models.DecimalField(max_digits=10, decimal_places=5, verbose_name='Списано')
     written_off_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата списания')
     written_off_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL,
                                         null=True, blank=True, verbose_name='Кто списал')
