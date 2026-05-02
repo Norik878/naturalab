@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User, Group
 from .models import Batch
 from orders.models import ProductionOrder
+from .models import Batch, Ingredient
 
 @login_required
 def dashboard(request):
@@ -71,3 +72,45 @@ def user_delete(request, pk):
         user.delete()
         messages.success(request, f'Сотрудник {username} удалён.')
     return redirect('user-list')
+
+@login_required
+def batch_create(request):
+    ingredients = Ingredient.objects.all()
+    if request.method == 'POST':
+        ingredient_id = request.POST.get('ingredient')
+        lot_number    = request.POST.get('lot_number')
+        quantity      = request.POST.get('quantity')
+        received_at   = request.POST.get('received_at')
+        expiry_date   = request.POST.get('expiry_date')
+
+        if Batch.objects.filter(lot_number=lot_number).exists():
+            messages.error(request, f'Партия с номером {lot_number} уже существует!')
+        else:
+            Batch.objects.create(
+                ingredient_id=ingredient_id,
+                lot_number=lot_number,
+                quantity=quantity,
+                received_at=received_at,
+                expiry_date=expiry_date,
+                status='available'
+            )
+            messages.success(request, f'Партия {lot_number} успешно добавлена!')
+            return redirect('batch-list')
+
+    return render(request, 'warehouse/batch_create.html', {'ingredients': ingredients})
+
+@login_required
+def ingredient_create(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        unit = request.POST.get('unit')
+        description = request.POST.get('description', '')
+
+        if Ingredient.objects.filter(name=name).exists():
+            messages.error(request, f'Сырьё "{name}" уже существует!')
+        else:
+            Ingredient.objects.create(name=name, unit=unit, description=description)
+            messages.success(request, f'Сырьё "{name}" добавлено!')
+            return redirect('batch-create')
+
+    return render(request, 'warehouse/ingredient_create.html')

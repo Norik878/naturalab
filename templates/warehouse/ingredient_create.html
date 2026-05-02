@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Новый вид сырья{% endblock %}
+{% block page_title %}Добавить вид сырья{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'batch-create' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Назад
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-500">
+        <i class="bi bi-droplet me-1 text-success"></i>Новый вид сырья
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label text-muted" style="font-size:13px">Название</label>
+            <input type="text" name="name" class="form-control"
+                   placeholder="Например: Масло авокадо" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-muted" style="font-size:13px">Единица измерения</label>
+            <select name="unit" class="form-select" required>
+              <option value="">— Выберите —</option>
+              <option value="kg">Килограмм</option>
+              <option value="g">Грамм</option>
+              <option value="l">Литр</option>
+              <option value="ml">Миллилитр</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-muted" style="font-size:13px">Описание (необязательно)</label>
+            <textarea name="description" class="form-control" rows="3"
+                      placeholder="Краткое описание сырья..."></textarea>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-plus-lg me-1"></i>Добавить
+            </button>
+            <a href="{% url 'batch-create' %}" class="btn btn-outline-secondary">Отмена</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
