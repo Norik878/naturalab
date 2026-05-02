@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Вход — NaturaLab</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      border: 0.5px solid #e9ecef;
+    }
+    .logo { color: #198754; font-size: 36px; }
+    .btn-login { background: #198754; color: #fff; border: none; padding: 10px; font-size: 15px; }
+    .btn-login:hover { background: #146c43; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="text-center mb-4">
+      <div class="logo"><i class="bi bi-flower1"></i></div>
+      <h4 class="fw-bold mt-2 mb-0">NaturaLab</h4>
+      <div class="text-muted" style="font-size:13px">Производство натуральной косметики</div>
+    </div>
+
+    {% if form.errors %}
+    <div class="alert alert-danger py-2" style="font-size:13px">
+      Неверный логин или пароль
+    </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label text-muted" style="font-size:13px">Логин</label>
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0">
+            <i class="bi bi-person text-muted"></i>
+          </span>
+          <input type="text" name="username" class="form-control border-start-0"
+                 placeholder="Введите логин" autofocus required>
+        </div>
+      </div>
+      <div class="mb-4">
+        <label class="form-label text-muted" style="font-size:13px">Пароль</label>
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0">
+            <i class="bi bi-lock text-muted"></i>
+          </span>
+          <input type="password" name="password" class="form-control border-start-0"
+                 placeholder="Введите пароль" required>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-login w-100 rounded-3">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Войти
+      </button>
+    </form>
+  </div>
+</body>
+</html>

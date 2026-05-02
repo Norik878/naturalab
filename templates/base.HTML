@@ -16,6 +16,8 @@
       position: fixed;
       top: 0; left: 0;
       padding-top: 20px;
+      display: flex;
+      flex-direction: column;
     }
     .sidebar .logo {
       padding: 0 20px 20px;
@@ -29,6 +31,8 @@
       padding: 9px 20px;
       font-size: 14px;
       border-left: 3px solid transparent;
+      display: flex;
+      align-items: center;
     }
     .sidebar .nav-link:hover { background: #f8f9fa; color: #000; }
     .sidebar .nav-link.active {
@@ -43,6 +47,15 @@
       padding: 12px 20px 4px;
       letter-spacing: .05em;
     }
+    .sidebar .nav-link.admin-link {
+      color: #6f42c1;
+    }
+    .sidebar .nav-link.admin-link:hover { background: #f5f0ff; color: #6f42c1; }
+    .sidebar .nav-link.admin-link.active {
+      color: #6f42c1;
+      border-left-color: #6f42c1;
+      background: #f5f0ff;
+    }
     .main-content {
       margin-left: 230px;
       padding: 24px;
@@ -56,9 +69,15 @@
       align-items: center;
       justify-content: space-between;
     }
-    .badge-ok      { background: #d1fae5; color: #065f46; }
-    .badge-warning { background: #fef3c7; color: #92400e; }
-    .badge-danger  { background: #fee2e2; color: #991b1b; }
+    .user-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .badge-admin { background: #ede9fe; color: #6f42c1; }
+    .badge-worker { background: #d1fae5; color: #065f46; }
   </style>
 </head>
 <body>
@@ -68,25 +87,57 @@
     <h5><i class="bi bi-flower1"></i> NaturaLab</h5>
     <small>Производство косметики</small>
   </div>
-  <div class="nav-section">ГЛАВНОЕ</div>
-  <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-    <i class="bi bi-grid me-2"></i>Дашборд
-  </a>
-  <div class="nav-section">СКЛАД</div>
-  <a href="{% url 'batch-list' %}" class="nav-link {% if 'batch' in request.resolver_match.url_name %}active{% endif %}">
-    <i class="bi bi-boxes me-2"></i>Партии сырья
-  </a>
-  <a href="{% url 'expiry-list' %}" class="nav-link {% if request.resolver_match.url_name == 'expiry-list' %}active{% endif %}">
-    <i class="bi bi-clock-history me-2"></i>Сроки годности
-  </a>
-  <div class="nav-section">ПРОИЗВОДСТВО</div>
-  <a href="{% url 'order-list' %}" class="nav-link {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
-    <i class="bi bi-clipboard2-check me-2"></i>Заказы
-  </a>
+
+  <div style="flex:1;overflow-y:auto">
+    <div class="nav-section">ГЛАВНОЕ</div>
+    <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      <i class="bi bi-grid me-2"></i>Дашборд
+    </a>
+
+    <div class="nav-section">СКЛАД</div>
+    <a href="{% url 'batch-list' %}" class="nav-link {% if 'batch' in request.resolver_match.url_name %}active{% endif %}">
+      <i class="bi bi-boxes me-2"></i>Партии сырья
+    </a>
+    <a href="{% url 'expiry-list' %}" class="nav-link {% if request.resolver_match.url_name == 'expiry-list' %}active{% endif %}">
+      <i class="bi bi-clock-history me-2"></i>Сроки годности
+    </a>
+
+    <div class="nav-section">ПРОИЗВОДСТВО</div>
+    <a href="{% url 'order-list' %}" class="nav-link {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
+      <i class="bi bi-clipboard2-check me-2"></i>Заказы
+    </a>
+
+    {% if request.user.is_superuser %}
+<div class="nav-section" style="color:#6f42c1">АДМИНИСТРАТОР</div>
+<a href="{% url 'admin:index' %}" class="nav-link admin-link" target="_blank">
+  <i class="bi bi-gear me-2"></i>Панель Admin
+</a>
+<a href="{% url 'user-list' %}" class="nav-link admin-link {% if request.resolver_match.url_name == 'user-list' %}active{% endif %}">
+  <i class="bi bi-people me-2"></i>Сотрудники
+</a>
+{% endif %}
+  </div>
+
+  <div style="padding:12px 20px;border-top:1px solid #e9ecef">
+    <div style="margin-bottom:4px">
+      {% if request.user.is_superuser %}
+        <span class="user-badge badge-admin">Администратор</span>
+      {% else %}
+        <span class="user-badge badge-worker">Сотрудник</span>
+      {% endif %}
+    </div>
+    <div style="font-size:13px;font-weight:500;color:#333">{{ request.user.username }}</div>
+    <form method="post" action="{% url 'logout' %}" style="margin:0">
+  {% csrf_token %}
+  <button type="submit" style="background:none;border:none;padding:0;font-size:12px;color:#dc3545;cursor:pointer">
+    <i class="bi bi-box-arrow-right me-1"></i>Выйти
+  </button>
+</form>
+  </div>
 </div>
 
 <div class="topbar">
-  <span class="fw-500" style="font-size:15px">{% block page_title %}{% endblock %}</span>
+  <span style="font-size:15px;font-weight:500">{% block page_title %}{% endblock %}</span>
   <div class="d-flex gap-2">
     {% block topbar_actions %}{% endblock %}
   </div>
