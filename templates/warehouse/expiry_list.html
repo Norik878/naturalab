@@ -41,7 +41,7 @@
         <tr>
           <td>{{ batch.ingredient.name }}</td>
           <td>{{ batch.lot_number }}</td>
-          <td>{{ batch.quantity }} {{ batch.ingredient.get_unit_display }}</td>
+          <td>{{ batch.quantity|floatformat:2 }} {{ batch.ingredient.get_unit_display }}</td>
           <td>{{ batch.expiry_date }}</td>
           <td>
             {% if batch.days_left < 0 %}

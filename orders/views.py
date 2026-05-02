@@ -47,7 +47,7 @@ def order_start(request, pk):
     order = get_object_or_404(ProductionOrder, pk=pk)
     if request.method == 'POST':
         try:
-            start_order(order)
+            start_order(order, user=request.user)
             messages.success(request, f'Заказ {order.number} запущен! Сырьё списано по FEFO.')
         except ValidationError as e:
             messages.error(request, e.message if hasattr(e, 'message') else str(e).strip("[]'"))

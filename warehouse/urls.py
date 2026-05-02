@@ -8,4 +8,5 @@ urlpatterns = [
     path('ingredients/create/',   views.ingredient_create, name='ingredient-create'),
     path('users/',                views.user_list,         name='user-list'),
     path('users/<int:pk>/delete/', views.user_delete,      name='user-delete'),
+    path('writeoff/', views.writeoff_log, name='writeoff-log'),
 ]

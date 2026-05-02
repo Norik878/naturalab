@@ -55,3 +55,20 @@ class Batch(models.Model):
         elif self.days_left <= 30:
             return 'warning'
         return 'ok'
+    
+class WriteOffLog(models.Model):
+    batch       = models.ForeignKey(Batch, on_delete=models.PROTECT, verbose_name='Партия')
+    order       = models.ForeignKey('orders.ProductionOrder', on_delete=models.PROTECT,
+                                    verbose_name='Заказ')
+    quantity    = models.DecimalField(max_digits=10, decimal_places=5, verbose_name='Списано')
+    written_off_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата списания')
+    written_off_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL,
+                                        null=True, blank=True, verbose_name='Кто списал')
+
+    class Meta:
+        verbose_name = 'Запись списания'
+        verbose_name_plural = 'Журнал списания'
+        ordering = ['-written_off_at']
+
+    def __str__(self):
+        return f'{self.batch.ingredient.name} - {self.quantity} ({self.order.number})'

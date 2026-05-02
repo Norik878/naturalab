@@ -23,7 +23,7 @@
         <tr>
           <td class="fw-500">{{ batch.lot_number }}</td>
           <td>{{ batch.ingredient.name }}</td>
-          <td>{{ batch.quantity }} {{ batch.ingredient.get_unit_display }}</td>
+          <td>{{ batch.quantity|floatformat:0 }} {{ batch.ingredient.get_unit_display }}</td>
           <td>{{ batch.received_at }}</td>
           <td>{{ batch.expiry_date }}</td>
           <td>

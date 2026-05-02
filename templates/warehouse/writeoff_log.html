@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Журнал списания{% endblock %}
+{% block page_title %}Журнал списания сырья{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Дата и время</th>
+          <th>Сырьё</th>
+          <th>Партия</th>
+          <th>Списано</th>
+          <th>Заказ</th>
+          <th>Кто списал</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td style="font-size:13px;color:#6c757d">
+            {{ log.written_off_at|date:"d.m.Y H:i" }}
+          </td>
+          <td class="fw-500">{{ log.batch.ingredient.name }}</td>
+          <td>
+            <span class="badge" style="background:#e9ecef;color:#495057">
+              {{ log.batch.lot_number }}
+            </span>
+          </td>
+          <td>
+             {{ log.quantity|floatformat:2 }} {{ log.batch.ingredient.get_unit_display }}
+          </td>
+          <td>
+            <a href="{% url 'order-detail' log.order.pk %}" class="text-decoration-none">
+              {{ log.order.number }}
+            </a>
+          </td>
+          <td style="font-size:13px">
+            {% if log.written_off_by %}
+              <i class="bi bi-person-circle me-1 text-muted"></i>
+              {{ log.written_off_by.username }}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center text-muted py-4">
+            Списаний пока нет — запустите производственный заказ
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

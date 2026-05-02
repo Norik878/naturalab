@@ -114,3 +114,12 @@ def ingredient_create(request):
             return redirect('batch-create')
 
     return render(request, 'warehouse/ingredient_create.html')
+
+from .models import Batch, Ingredient, WriteOffLog
+
+@login_required
+def writeoff_log(request):
+    logs = WriteOffLog.objects.select_related(
+        'batch__ingredient', 'order', 'written_off_by'
+    ).all()
+    return render(request, 'warehouse/writeoff_log.html', {'logs': logs})

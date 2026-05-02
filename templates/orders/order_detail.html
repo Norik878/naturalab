@@ -76,11 +76,11 @@
             {% for item in recipe_items %}
             <tr>
               <td>{{ item.ingredient.name }}</td>
-              <td>{{ item.quantity_per_unit }} {{ item.ingredient.get_unit_display }}</td>
+              <td>{{ item.quantity_per_unit|floatformat:2 }} {{ item.ingredient.get_unit_display }}</td>
               <td class="fw-500">
-                {{ item.quantity_per_unit }} × {{ order.quantity }} =
+                {{ item.quantity_per_unit|floatformat:2 }} × {{ order.quantity }} =
                 <span class="text-success">
-                  {{ item.total }} {{ item.ingredient.get_unit_display }}
+                  {{ item.total|floatformat:2 }} {{ item.ingredient.get_unit_display }}
                 </span>
               </td>
             </tr>

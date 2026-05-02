@@ -1,10 +1,10 @@
 from django.db import transaction
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from warehouse.models import Batch
+from warehouse.models import Batch, WriteOffLog
 
 @transaction.atomic
-def start_order(order):
+def start_order(order, user=None):
     """Запускает заказ и списывает сырьё по алгоритму FEFO."""
     recipe_items = order.product.recipe_items.all()
 
@@ -30,13 +30,22 @@ def start_order(order):
             if batch.quantity == 0:
                 batch.status = 'depleted'
             batch.save()
+
+            # Записываем в журнал
+            WriteOffLog.objects.create(
+                batch=batch,
+                order=order,
+                quantity=take,
+                written_off_by=user,
+            )
+
             remaining -= take
 
         if remaining > 0:
             raise ValidationError(
-                f'Недостаточно сырья: {item.ingredient.name} '
-                f'(не хватает {remaining} {item.ingredient.get_unit_display()})'
-            )
+         f'Недостаточно сырья: {item.ingredient.name} — '
+         f'не хватает {round(remaining, 2)} {item.ingredient.get_unit_display()}'
+        )
 
     order.status = 'in_progress'
     order.save()
