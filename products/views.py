@@ -1,66 +1,53 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError
-from .models import ProductionOrder
-from .services import start_order
+from django.contrib.auth.decorators import user_passes_test
+from .models import Product, RecipeItem
+from warehouse.models import Ingredient
 
-@login_required
-def order_list(request):
-    orders = ProductionOrder.objects.all()
-    return render(request, 'orders/order_list.html', {'orders': orders})
+def admin_required(view_func):
+    return user_passes_test(lambda u: u.is_superuser)(view_func)
 
-@login_required
-def order_create(request):
-    from products.models import Product
+@admin_required
+def product_list(request):
+    products = Product.objects.prefetch_related('recipe_items__ingredient').all()
+    return render(request, 'products/product_list.html', {'products': products})
+
+@admin_required
+def product_create(request):
+    ingredients = Ingredient.objects.all()
     if request.method == 'POST':
-        product_id = request.POST.get('product')
-        quantity   = request.POST.get('quantity')
-        due_date   = request.POST.get('due_date')
-        notes      = request.POST.get('notes', '')
-        order = ProductionOrder.objects.create(
-            product_id=product_id,
-            quantity=quantity,
-            due_date=due_date,
-            notes=notes,
-            created_by=request.user,
-        )
-        messages.success(request, f'Заказ {order.number} успешно создан!')
-        return redirect('order-list')
-    products = Product.objects.all()
-    return render(request, 'orders/order_create.html', {'products': products})
+        name        = request.POST.get('name')
+        description = request.POST.get('description', '')
 
-@login_required
-def order_detail(request, pk):
-    order = get_object_or_404(ProductionOrder, pk=pk)
-    recipe_items = []
-    for item in order.product.recipe_items.all():
-        recipe_items.append({
-            'ingredient':       item.ingredient,
-            'quantity_per_unit': item.quantity_per_unit,
-            'total':            item.quantity_per_unit * order.quantity,
-        })
-    return render(request, 'orders/order_detail.html', {
-        'order':        order,
-        'recipe_items': recipe_items,
-    })
+        if Product.objects.filter(name=name).exists():
+            messages.error(request, f'Продукт "{name}" уже существует!')
+        else:
+            product = Product.objects.create(name=name, description=description)
 
-@login_required
-def order_start(request, pk):
-    order = get_object_or_404(ProductionOrder, pk=pk)
+            ingredient_ids = request.POST.getlist('ingredient_id')
+            quantities     = request.POST.getlist('quantity')
+
+            for ing_id, qty in zip(ingredient_ids, quantities):
+                if ing_id and qty:
+                    try:
+                        RecipeItem.objects.create(
+                            product=product,
+                            ingredient_id=ing_id,
+                            quantity_per_unit=qty
+                        )
+                    except Exception:
+                        pass
+
+            messages.success(request, f'Продукт "{name}" успешно создан!')
+            return redirect('product-list')
+
+    return render(request, 'products/product_create.html', {'ingredients': ingredients})
+
+@admin_required
+def product_delete(request, pk):
+    product = get_object_or_404(Product, pk=pk)
     if request.method == 'POST':
-        try:
-            start_order(order)
-            messages.success(request, f'Заказ {order.number} запущен! Сырьё списано по FEFO.')
-        except ValidationError as e:
-            messages.error(request, e.message if hasattr(e, 'message') else str(e).strip("[]'"))
-    return redirect('order-detail', pk=pk)
-
-@login_required
-def order_done(request, pk):
-    order = get_object_or_404(ProductionOrder, pk=pk)
-    if request.method == 'POST':
-        order.status = 'done'
-        order.save()
-        messages.success(request, f'Заказ {order.number} завершён!')
-    return redirect('order-detail', pk=pk)
+        name = product.name
+        product.delete()
+        messages.success(request, f'Продукт "{name}" удалён.')
+    return redirect('product-list')

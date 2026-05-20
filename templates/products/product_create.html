@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Новый продукт{% endblock %}
+{% block page_title %}Создать продукт{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'product-list' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Назад
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-500">
+        <i class="bi bi-box me-1 text-success"></i>Новый продукт
+      </div>
+      <div class="card-body">
+        <form method="post" id="product-form">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label text-muted" style="font-size:13px">Название продукта</label>
+            <input type="text" name="name" class="form-control"
+                   placeholder="Например: Крем для рук" required>
+          </div>
+          <div class="mb-4">
+            <label class="form-label text-muted" style="font-size:13px">Описание (необязательно)</label>
+            <textarea name="description" class="form-control" rows="2"></textarea>
+          </div>
+
+          <div class="fw-500 mb-3" style="font-size:14px">
+            <i class="bi bi-list-check me-1 text-success"></i>Рецептура
+          </div>
+
+          <div id="recipe-items">
+            <div class="row g-2 mb-2 recipe-row">
+              <div class="col-md-7">
+                <select name="ingredient_id" class="form-select form-select-sm">
+                  <option value="">— Выберите сырьё —</option>
+                  {% for ing in ingredients %}
+                  <option value="{{ ing.pk }}">{{ ing.name }} ({{ ing.get_unit_display }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-3">
+                <input type="number" name="quantity" class="form-control form-control-sm"
+                       placeholder="Количество" step="0.01" min="0">
+              </div>
+              <div class="col-md-2">
+                <button type="button" class="btn btn-sm btn-outline-danger w-100 remove-row">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-outline-success btn-sm mb-4" id="add-row">
+            <i class="bi bi-plus-lg me-1"></i>Добавить ингредиент
+          </button>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-check-lg me-1"></i>Создать продукт
+            </button>
+            <a href="{% url 'product-list' %}" class="btn btn-outline-secondary">Отмена</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('add-row').addEventListener('click', function() {
+  const container = document.getElementById('recipe-items');
+  const first = container.querySelector('.recipe-row');
+  const clone = first.cloneNode(true);
+  clone.querySelectorAll('input').forEach(i => i.value = '');
+  clone.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+  container.appendChild(clone);
+  bindRemove(clone);
+});
+
+function bindRemove(row) {
+  row.querySelector('.remove-row').addEventListener('click', function() {
+    const rows = document.querySelectorAll('.recipe-row');
+    if (rows.length > 1) row.remove();
+  });
+}
+
+document.querySelectorAll('.recipe-row').forEach(bindRemove);
+</script>
+{% endblock %}

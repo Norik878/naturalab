@@ -9,6 +9,58 @@
 {% endblock %}
 
 {% block content %}
+
+{% if expired > 0 %}
+<div class="alert alert-danger d-flex align-items-center gap-3 mb-4 alert-dismissible fade show" role="alert">
+  <i class="bi bi-exclamation-octagon-fill fs-4"></i>
+  <div>
+    <strong>Внимание!</strong> На складе есть просроченные партии —
+    <strong>{{ expired }} шт.</strong> Требуется немедленное списание!
+    <a href="{% url 'expiry-list' %}" class="alert-link ms-2">Перейти к срокам →</a>
+  </div>
+  <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+{% if empty_batches %}
+<div class="alert alert-danger d-flex align-items-center gap-3 mb-4 alert-dismissible fade show" role="alert">
+  <i class="bi bi-archive-fill fs-4"></i>
+  <div>
+    <strong>Закончилось сырьё!</strong>
+    {% for batch in empty_batches %}
+      <strong>{{ batch.ingredient.name }}</strong> ({{ batch.lot_number }}){% if not forloop.last %}, {% endif %}
+    {% endfor %}
+    <a href="{% url 'batch-list' %}" class="alert-link ms-2">Перейти к партиям →</a>
+  </div>
+  <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+{% if low_batches %}
+<div class="alert alert-warning d-flex align-items-center gap-3 mb-4 alert-dismissible fade show" role="alert">
+  <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+  <div>
+    <strong>Мало сырья!</strong> Остаток ниже минимума:
+    {% for batch in low_batches %}
+      <strong>{{ batch.ingredient.name }}</strong> ({{ batch.quantity|floatformat:0 }} {{ batch.ingredient.get_unit_display }}){% if not forloop.last %}, {% endif %}
+    {% endfor %}
+    <a href="{% url 'batch-list' %}" class="alert-link ms-2">Посмотреть →</a>
+  </div>
+  <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+{% if expiring_soon > 0 and expired == 0 and not empty_batches and not low_batches %}
+<div class="alert alert-warning d-flex align-items-center gap-3 mb-4 alert-dismissible fade show" role="alert">
+  <i class="bi bi-clock-history fs-4"></i>
+  <div>
+    <strong>Скоро истекает срок</strong> у {{ expiring_soon }} партий — проверьте склад.
+    <a href="{% url 'expiry-list' %}" class="alert-link ms-2">Перейти →</a>
+  </div>
+  <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
 <div class="row g-3 mb-4">
   <div class="col-md-3">
     <div class="card border-0 bg-white shadow-sm p-3">

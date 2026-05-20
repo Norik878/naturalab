@@ -12,6 +12,9 @@ def dashboard(request):
     today = timezone.now().date()
     batches = Batch.objects.filter(status='available')
 
+    empty_batches = [b for b in batches if b.stock_status == 'empty']
+    low_batches   = [b for b in batches if b.stock_status in ('low', 'critical')]
+
     context = {
         'active_orders':    ProductionOrder.objects.exclude(status__in=['done', 'cancelled']).count(),
         'total_batches':    batches.count(),
@@ -19,6 +22,8 @@ def dashboard(request):
         'expired':          batches.filter(expiry_date__lt=today).count(),
         'expiring_batches': batches.filter(expiry_date__lte=today + timezone.timedelta(days=30)).order_by('expiry_date')[:5],
         'recent_orders':    ProductionOrder.objects.all()[:5],
+        'empty_batches':    empty_batches,
+        'low_batches':      low_batches,
     }
     return render(request, 'dashboard.html', context)
 
